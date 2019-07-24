@@ -1,43 +1,167 @@
-<!doctype html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="utf-8">
-    <title>AJAX</title>
+    <title>JSON Server</title>
+    <style>
+        .btn {
+            border: 1px solid black;
+            padding: 3px;
+            display: inline-block;
+            width: 100px;
+            text-align: center;
+        }
+
+        .hide {
+            display: none
+        }
+
+        form {
+            background-color: aliceblue;
+            border: 1px solid black;
+            padding: 10px;
+        }
+    </style>
 </head>
 
 <body>
-<h1> AJAX jQuery</h1>
+<h1>JSON Server AJAX testing</h1>
+<div id="message"></div>
+<div id="load1" class="btn hide">load 1</div>
+<div id="send1" class="btn hide">Send 1</div>
+<div id="pageInfo"></div>
+<div id="prev" class="btn">Prev</div>
+<div id="next" class="btn">Next</div>
 <div id="output"></div>
-<form id="myForm"> First Name :
-    <input type="text" name="first" value="andresshare">
-    <br> Last Name:
-    <input type="text" name="last" value="share">
-    <input type="submit" value="submit data"> </form>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<form id="myForm">
+    <input type="text" name="first" value="andres">
+    <input type="text" name="last" value="Share">
+    <input type="text" name="company" value="superMegaFragilistico">
+    <input type="submit" value="Send Data"> </form>
+<br>
+<input type="text" name="search">
+<button class='btn' id="search">Search</button>
+<br>
+<textarea id="comments"></textarea>
+<button class="btn" id="addComment">Add Comment</button>
+<br>
 <script>
-    let myForm = document.getElementById('myForm');
-    myForm.addEventListener('submit',function(e){
+    let load1 = document.querySelector('#load1');
+    let send1 = document.querySelector('#send1');
+    let message = document.getElementById('message');
+    let output = document.getElementById('output');
+    let currentId = 1;
+    document.querySelector('#next').addEventListener('click', function () {
+        currentId++;
+        loadPage();
+    })
+    document.querySelector('#prev').addEventListener('click', function () {
+        currentId--;
+        loadPage();
+    })
+    document.querySelector('#myForm').addEventListener('submit', function (e) {
         e.preventDefault();
-        let url = 'http://s179017901.onlinehome.us/discoveryvip/';
         let first = document.querySelector('input[name="first"]').value;
         let last = document.querySelector('input[name="last"]').value;
-        let myData = 'first='+first+'&last='+last;
-        axios.post(url,myData)
-            .then(function(data){
-                console.log(data.data)
-            })
-            .catch(function(error){
-                console.log(error)
-            })
-
+        let company = document.querySelector('input[name="company"]').value;
+        let data = 'first=' + first + '&last=' + last + '&company=' + company;
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                message.innerHTML = xhr.response;
+                console.log(JSON.parse(xhr.response))
+            }
+        }
+        xhr.open('POST', 'http://localhost:63342/posts', true)
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+        xhr.send(data)
+    })
+    document.querySelector('#search').addEventListener('click', function () {
+        output.innerHTML = ''
+        let search = document.querySelector('input[name="search"]').value;
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                let myObj = JSON.parse(xhr.response);
+                console.log(myObj)
+                for (let x = 0; x < myObj.length; x++) {
+                    output.innerHTML += '<b>' + myObj[x].first + ' ' + myObj[x].last + '</b> : ' + myObj[x].id + '<br>';
+                }
+            }
+        }
+        xhr.open('GET', 'http://localhost:63342/posts?q=' + search, true)
+        xhr.send()
+    })
+    document.querySelector('#addComment').addEventListener('click', function () {
+        let comments = document.getElementById('comments').value
+        let data = 'postId=' + currentId + '&body=' + comments;
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                let myObj = JSON.parse(xhr.response)
+                output.innerHTML += '<b>' + myObj.id + '</b> : ' + myObj.body + '<br>';
+            }
+        }
+        xhr.open('POST', 'http://localhost:63342/comments', true)
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+        xhr.send(data)
     })
 
+    function loadPage() {
+        output.innerHTML = ''
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                let myObj = JSON.parse(xhr.response);
+                for (let key in myObj[0]) {
+                    output.innerHTML += '<b>' + key + '</b> : ' + myObj[0][key] + '<br>';
+                }
+                loadComments();
+            }
+        }
+        xhr.open('GET', 'http://localhost:3000/posts?id=' + currentId, true)
+        xhr.send()
+    }
 
+    function loadComments() {
+        output.innerHTML += '<p>Comments</p>'
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                let myObj = JSON.parse(xhr.response);
+                for (let x = 0; x < myObj.length; x++) {
+                    output.innerHTML += '<b>' + myObj[x].id + '</b> : ' + myObj[x].body + '<br>';
+                }
+            }
+        }
+        xhr.open('GET', 'http://localhost:63342/comments?postId=' + currentId, true)
+        xhr.send()
+    }
 
+    function makeGet(url) {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                message.innerHTML = xhr.response;
+                console.log(JSON.parse(xhr.response))
+            }
+        }
+        xhr.open('GET', url, true)
+        xhr.send()
+    }
 
-
-</script>
+    function makePost(url, data) {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                message.innerHTML = xhr.response;
+                console.log(JSON.parse(xhr.response))
+            }
+        }
+        xhr.open('POST', url, true)
+        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+        xhr.send(data)
+    }
+    </script>
 </body>
 
 </html>
