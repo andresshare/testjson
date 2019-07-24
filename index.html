@@ -1,167 +1,84 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <title>JSON Server</title>
-    <style>
-        .btn {
-            border: 1px solid black;
-            padding: 3px;
-            display: inline-block;
-            width: 100px;
-            text-align: center;
-        }
-
-        .hide {
-            display: none
-        }
-
-        form {
-            background-color: aliceblue;
-            border: 1px solid black;
-            padding: 10px;
-        }
-    </style>
+    <meta charset="utf-8">
+    <title>Google Sheets JSON</title>
 </head>
 
 <body>
-<h1>JSON Server AJAX testing</h1>
-<div id="message"></div>
-<div id="load1" class="btn hide">load 1</div>
-<div id="send1" class="btn hide">Send 1</div>
-<div id="pageInfo"></div>
-<div id="prev" class="btn">Prev</div>
-<div id="next" class="btn">Next</div>
-<div id="output"></div>
+<h1>AJAX JSON data from Google Sheets</h1>
+<button type="button" id="loadData">Load JSON</button>
+<button type="button" id="fillData">Get Random User</button>
 <form id="myForm">
-    <input type="text" name="first" value="andres">
-    <input type="text" name="last" value="Share">
-    <input type="text" name="company" value="superMegaFragilistico">
-    <input type="submit" value="Send Data"> </form>
-<br>
-<input type="text" name="search">
-<button class='btn' id="search">Search</button>
-<br>
-<textarea id="comments"></textarea>
-<button class="btn" id="addComment">Add Comment</button>
-<br>
+    <div>First Name :
+        <input type="text" name="First" value="First Name">
+        <br> </div>
+    <div>Last Name :
+        <input type="text" name="Last" value="Last Name">
+        <br> </div>
+    <div>Company :
+        <input type="text" name="Company" value="Company">
+        <br> </div>
+    <div>Group :
+        <input type="text" name="Group" value="Group">
+        <br> </div>
+    <div>Email :
+        <input type="text" name="Email" value="Email@email.com">
+        <br> </div>
+    <button type="submit" id="submit">Send Data to Google Sheet</button>
+</form>
+<div id="output"></div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script>
-    let load1 = document.querySelector('#load1');
-    let send1 = document.querySelector('#send1');
-    let message = document.getElementById('message');
-    let output = document.getElementById('output');
-    let currentId = 1;
-    document.querySelector('#next').addEventListener('click', function () {
-        currentId++;
-        loadPage();
-    })
-    document.querySelector('#prev').addEventListener('click', function () {
-        currentId--;
-        loadPage();
-    })
-    document.querySelector('#myForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        let first = document.querySelector('input[name="first"]').value;
-        let last = document.querySelector('input[name="last"]').value;
-        let company = document.querySelector('input[name="company"]').value;
-        let data = 'first=' + first + '&last=' + last + '&company=' + company;
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                message.innerHTML = xhr.response;
-                console.log(JSON.parse(xhr.response))
-            }
-        }
-        xhr.open('POST', 'http://localhost:63342/posts', true)
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
-        xhr.send(data)
-    })
-    document.querySelector('#search').addEventListener('click', function () {
-        output.innerHTML = ''
-        let search = document.querySelector('input[name="search"]').value;
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                let myObj = JSON.parse(xhr.response);
-                console.log(myObj)
-                for (let x = 0; x < myObj.length; x++) {
-                    output.innerHTML += '<b>' + myObj[x].first + ' ' + myObj[x].last + '</b> : ' + myObj[x].id + '<br>';
+    $(function () {
+        $('#fillData').click(function () {
+            $.ajax({
+                url: 'https://randomuser.me/api/'
+                , dataType: 'json'
+                , success: function (data) {
+                    console.log(data.results[0]);
+                    var obj = data.results[0];
+                    $('input[name="First"]').val(obj.name.first)
+                    $('input[name="Last"]').val(obj.name.last)
+                    $('input[name="Company"]').val(obj.location.city)
+                    $('input[name="Group"]').val(obj.nat)
+                    $('input[name="Email"]').val(obj.email)
+
                 }
-            }
-        }
-        xhr.open('GET', 'http://localhost:63342/posts?q=' + search, true)
-        xhr.send()
-    })
-    document.querySelector('#addComment').addEventListener('click', function () {
-        let comments = document.getElementById('comments').value
-        let data = 'postId=' + currentId + '&body=' + comments;
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                let myObj = JSON.parse(xhr.response)
-                output.innerHTML += '<b>' + myObj.id + '</b> : ' + myObj.body + '<br>';
-            }
-        }
-        xhr.open('POST', 'http://localhost:63342/comments', true)
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
-        xhr.send(data)
-    })
-
-    function loadPage() {
-        output.innerHTML = ''
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                let myObj = JSON.parse(xhr.response);
-                for (let key in myObj[0]) {
-                    output.innerHTML += '<b>' + key + '</b> : ' + myObj[0][key] + '<br>';
+            });
+        })
+        $('#myForm').submit(function (e) {
+            e.preventDefault();
+            var myData = $('form#myForm :input').serialize();
+            var url = 'https://script.google.com/macros/s/AKfycbz3XKJ4o7B6SADFyiKA0peYuVBtgkV73l9XVPzryea7ib_uYQvB/exec'
+            console.log(myData)
+            $.ajax({
+                url: url
+                , method: 'POST'
+                , data: myData
+                , success: function (data) {
+                    console.log(data)
                 }
-                loadComments();
-            }
-        }
-        xhr.open('GET', 'http://localhost:3000/posts?id=' + currentId, true)
-        xhr.send()
-    }
-
-    function loadComments() {
-        output.innerHTML += '<p>Comments</p>'
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                let myObj = JSON.parse(xhr.response);
-                for (let x = 0; x < myObj.length; x++) {
-                    output.innerHTML += '<b>' + myObj[x].id + '</b> : ' + myObj[x].body + '<br>';
-                }
-            }
-        }
-        xhr.open('GET', 'http://localhost:63342/comments?postId=' + currentId, true)
-        xhr.send()
-    }
-
-    function makeGet(url) {
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                message.innerHTML = xhr.response;
-                console.log(JSON.parse(xhr.response))
-            }
-        }
-        xhr.open('GET', url, true)
-        xhr.send()
-    }
-
-    function makePost(url, data) {
-        let xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4) {
-                message.innerHTML = xhr.response;
-                console.log(JSON.parse(xhr.response))
-            }
-        }
-        xhr.open('POST', url, true)
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
-        xhr.send(data)
-    }
-    </script>
+            })
+        })
+        $('#loadData').click(function () {
+            var url = 'https://script.google.com/macros/s/AKfycbz3XKJ4o7B6SADFyiKA0peYuVBtgkV73l9XVPzryea7ib_uYQvB/exec'
+            $.getJSON(url, function (data) {
+                var html = '<h3>Google Sheet Data</h3><ul>';
+                $.each(data, function (key, val) {
+                    html += '<li> '
+                    for (var x = 0; x < val.length; x++) {
+                        html += val[x] + ' '
+                    }
+                    html += '</li> '
+                })
+                html += '</ul> '
+                $('#output').html(html);
+            })
+        })
+    });
+</script>
 </body>
 
 </html>
