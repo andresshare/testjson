@@ -1,68 +1,28 @@
-const btn = document.querySelector('.adder');
-const first = document.querySelector('input[name=first]');
-const last = document.querySelector('input[name=last]');
-const lister = document.querySelector('.lister');
-const message = document.querySelector('.message');
-lister.addEventListener('click', getter);
-btn.addEventListener('click', adder);
+let data = '{"tasks":{"Cut Grass":true,"Clean Room":false,"Go to Gym":true,"Make Dinner":false}}';
+let dataJSON = JSON.parse(data);
 
-function getter() {
-    fetch('http://localhost:3000/people').then(function (rep) {
-        return rep.json()
-    }).then(function (data) {
-        output(data);
-    })
+let  output = document.getElementById('output');
+let taskList = document.querySelector('#taskList');
+
+for(let key in dataJSON.tasks){
+    //console.log(key , dataJSON.tasks[key])
+    let status = !dataJSON.tasks[key] ? ' ' : ' checked ';
+    let html = '<li>'+key+' <input type="checkbox" value="'+key+'" '+status+'></li>';
+    taskList.innerHTML += html;
+
+}
+addEvents()
+function addEvents(){
+    let checkBoxes =document.querySelectorAll('#taskList input[type="checkbox"]');
+    for(let index in checkBoxes){
+        checkBoxes[index].onchange = updateJSON;
+    }
+    console.log(checkBoxes)
 }
 
-function output(data) {
-    message.innerHTML = "";
-    data.forEach(function (el, index) {
-        console.log(el);
-        let div = document.createElement('div');
-        div.innerHTML = `${el.id} <input type="text" value="${el.first}">`;
-        div.innerHTML += `<input type="text" value="${el.last}"><button>Update</button>`;
-        div.addEventListener('click', function () {
-            let temps = div.querySelectorAll('input');
-            let updater = div.querySelector('button');
-            updater.addEventListener('click', function () {
-                updateData(el.id, temps[0].value, temps[1].value);
-            })
-        })
-        message.appendChild(div);
-    })
+function updateJSON(){
+    let key = event.target.value;
+    console.log(key,event.target.checked)
+    dataJSON.tasks[key] = event.target.checked
 }
 
-function updateData(id, first, last) {
-    console.log(id, first, last);
-    fetch('http://localhost:3000/people/' + id, {
-        method: 'put'
-        , body: JSON.stringify({
-            first: first
-            , last: last
-        })
-        , headers: {
-            "Content-Type": "application/json"
-        }
-    }).then(function (res) {
-        return res.text();
-    }).then(function (data) {
-        console.log(data);
-    })
-}
-
-function adder() {
-    fetch('http://localhost:3000/people/', {
-        method: 'POST'
-        , body: JSON.stringify({
-            first: first.value
-            , last: last.value
-        })
-        , headers: {
-            'Content-Type': 'application/json'
-        }
-    }).then(function (res) {
-        return res.text();
-    }).then(function (data) {
-        console.log(data);
-        getter();
-    })
