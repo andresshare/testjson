@@ -1,85 +1,55 @@
 <!doctype html>
-<html lang="es">
-
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSON</title>
+    <title>AJAX</title>
 </head>
-
 <body>
-
-<div id="output">
-    <ul id="taskList"></ul>
-</div>
-<form id="myForm"> Task :
-    <input type="text" name="task" placeholder="add task">
-    <input type="submit" value="Add new Task"> </form>
+<h1> AJAX</h1>
+<div id="output"></div>
+<form id="myForm">
+    <input type="text" name="first" value="Laurence">
+    <br>
+    <input type="text" name="last" value="Svekis">
+    <br>
+    <input type="text" name="company" value="Discoveryvip">
+    <br>
+    <input type="submit" value="Send my Data"> </form>
 <script type="text/javascript">
-    let dataJSON = '';
-    let output = document.getElementById('output');
-    let taskList = document.querySelector('#taskList');
-    document.getElementById('myForm').addEventListener('submit', function (e) {
+    let myForm = document.getElementById('myForm')
+    myForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        let tempValue = document.querySelector('input[name="task"]').value;
-        addNewItem({
-            "info": tempValue
-            , "status": false
-        })
+        //let data = JSON.stringify(formData(myForm));
+        loadJSON(formData(myForm))
     })
-    window.onload = function () {
-        if (sessionStorage['tasklist'] != null) {
-            dataJSON = JSON.parse(sessionStorage['tasklist']);
-            buildCheckboxes(dataJSON)
+    function formData(form) {
+        let el = form.querySelectorAll('input[type="text"]');
+        let myData = '';
+        for (let x = 0; x < el.length; x++) {
+            let name = el[x].name;
+            let value = el[x].value;
+            //myData[name] = value;
+            myData += name + '=' + value + '&'
         }
-        else {
-            let data = '[{"info":"Cut the Grass","status":false},{"info":"Clean Room","status":true},{"info":"Go to Gym","status":false},{"info":"Make Dinner","status":false}]';
-            dataJSON = JSON.parse(data);
-            buildCheckboxes(dataJSON)
-        }
+        return myData.slice(0, -1);
     }
-
-    function addNewItem(data) {
-        addCheckbox(data, dataJSON.length);
-        dataJSON.push(data);
-        sessionStorage['tasklist'] = JSON.stringify(dataJSON);
-    }
-
-    function addCheckbox(data, key) {
-        let li = document.createElement('li');
-        let checkbox = document.createElement('input')
-        let textInside = document.createTextNode(data.info);
-        let span = document.createElement('span');
-        span.innerHTML = 'x';
-        span.onclick = remove;
-        checkbox.type = 'checkbox';
-        checkbox.value = key;
-        checkbox.checked = data.status;
-        checkbox.setAttribute('onchange', 'updateJSON()');
-        li.appendChild(textInside);
-        li.appendChild(checkbox);
-        li.appendChild(span);
-        document.querySelector('#taskList').appendChild(li);
-    }
-
-    function remove(event) {
-        let index = this.previousElementSibling.value;
-        taskList.innerHTML = '';
-        dataJSON.splice(index, 1)
-        buildCheckboxes(dataJSON)
-    }
-
-    function buildCheckboxes(data) {
-        for (let key in data) {
-            addCheckbox(data[key], key)
-        }
-    }
-
-    function updateJSON() {
-        let key = event.target.value;
-        dataJSON[key].status = event.target.checked;
-        sessionStorage['tasklist'] = JSON.stringify(dataJSON);
+    function loadJSON(data) {
+        const url = 'http://s179017901.onlinehome.us/discoveryvip/';
+        //'foo=bar&lorem=ipsum'
+        console.log(data)
+        const myData = data
+        fetch(url, {
+            method: 'post'
+            , headers: {
+                "Content-type": "application/x-www-form-urlencoded; charset=UTF-8"
+            }
+            , body: myData
+        }).then(function (response) {
+            return response.json()
+        }).then(function (data) {
+            console.log(data)
+        }).catch(error => console.log(error))
     }
 </script>
 </body>
-
 </html>
