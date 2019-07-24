@@ -1,84 +1,156 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-
 <head>
     <meta charset="utf-8">
-    <title>Google Sheets JSON</title>
-</head>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>AJAX tester</title>
+    <style>
+        .heading {
+            display: block;
+            width: 100%;
+            border: 1px solid black;
+            background-color: #222;
+            color: #fff;
+            padding: 10px;
+        }
 
+        div > p {
+            font-size: 0.8em;
+            color: #111;
+            padding: 20px;
+            background-color: #ddd;
+        }
+    </style>
+</head>
 <body>
-<h1>AJAX JSON data from Google Sheets</h1>
-<button type="button" id="loadData">Load JSON</button>
-<button type="button" id="fillData">Get Random User</button>
+<h1>AJAX Tester</h1>
+<div>URL:
+    <input type="text" name="url" value="https://reqres.in/api/users/2"> </div>
+<div>
+    <select id="resource">
+        <option value="JavaScript">JavaScript</option>
+        <option value="jQuery">jQuery</option>
+        <option value="Axios">Axios</option>
+        <option value="Fetch">Fetch</option>
+    </select>
+</div>
+<div>
+    <select id="method">
+        <option value="GET" selected>get</option>
+        <option value="POST" >post</option>
+    </select>
+</div>
 <form id="myForm">
-    <div>First Name :
-        <input type="text" name="First" value="First Name">
-        <br> </div>
-    <div>Last Name :
-        <input type="text" name="Last" value="Last Name">
-        <br> </div>
-    <div>Company :
-        <input type="text" name="Company" value="Company">
-        <br> </div>
-    <div>Group :
-        <input type="text" name="Group" value="Group">
-        <br> </div>
-    <div>Email :
-        <input type="text" name="Email" value="Email@email.com">
-        <br> </div>
-    <button type="submit" id="submit">Send Data to Google Sheet</button>
-</form>
+    <input type="text" name="first" value="Andresshare">
+    <input type="text" name="num" value="10"> </form>
+<div>
+    <input type="button" name="sender" value="Make Request"> </div>
 <div id="output"></div>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.js"></script>
 <script>
-    $(function () {
-        $('#fillData').click(function () {
-            $.ajax({
-                url: 'https://randomuser.me/api/'
-                , dataType: 'json'
-                , success: function (data) {
-                    console.log(data.results[0]);
-                    var obj = data.results[0];
-                    $('input[name="First"]').val(obj.name.first)
-                    $('input[name="Last"]').val(obj.name.last)
-                    $('input[name="Company"]').val(obj.location.city)
-                    $('input[name="Group"]').val(obj.nat)
-                    $('input[name="Email"]').val(obj.email)
-
-                }
-            });
-        })
-        $('#myForm').submit(function (e) {
-            e.preventDefault();
-            var myData = $('form#myForm :input').serialize();
-            var url = 'https://script.google.com/macros/s/AKfycbz3XKJ4o7B6SADFyiKA0peYuVBtgkV73l9XVPzryea7ib_uYQvB/exec'
-            console.log(myData)
-            $.ajax({
-                url: url
-                , method: 'POST'
-                , data: myData
-                , success: function (data) {
-                    console.log(data)
-                }
-            })
-        })
-        $('#loadData').click(function () {
-            var url = 'https://script.google.com/macros/s/AKfycbz3XKJ4o7B6SADFyiKA0peYuVBtgkV73l9XVPzryea7ib_uYQvB/exec'
-            $.getJSON(url, function (data) {
-                var html = '<h3>Google Sheet Data</h3><ul>';
-                $.each(data, function (key, val) {
-                    html += '<li> '
-                    for (var x = 0; x < val.length; x++) {
-                        html += val[x] + ' '
-                    }
-                    html += '</li> '
-                })
-                html += '</ul> '
-                $('#output').html(html);
-            })
-        })
+    //https://api.chucknorris.io/jokes/random
+    //https://randomuser.me/api/
+    document.addEventListener("DOMContentLoaded", function (event) {
+        document.querySelector('input[name="sender"]').addEventListener('click', makeRequest)
     });
+    function makeRequest() {
+        let url = document.querySelector('input[name="url"]').value;
+        let resource = document.querySelector('#resource').value;
+        let method = document.querySelector('#method').value;
+        let formd = $('#myForm').serialize()
+        switch (resource) {
+            case "jQuery":
+                ajaxJQ(url, method, formd);
+                break;
+            case "Axios":
+                ajaxAX(url, method, formd);
+                break;
+            case "Fetch":
+                ajaxFe(url, method, formd);
+                break;
+            default:
+                ajaxJS(url, method, formd);
+        }
+    }
+    function ajaxFe(url, method, formd)  {
+        let para = method == 'POST' ? {
+            method:method,
+            body:formd,
+            headers:{'Content-Type': 'application/x-www-form-urlencoded'}
+        }:{}
+        fetch(url,para).then(function (response) {
+            //check status
+            return response.json()
+        }).catch(function (error) {
+            return output(error, '0', 'Fetch FAILED')
+        }).then(function (response) {
+            return output(response, '200', 'Fetch AJAX')
+        })
+    }
+    function ajaxAX(url, method, formd)  {
+        axios({
+            method: method
+            , url: url
+            ,data:formd
+        }).then(function (response) {
+            output(response.data, response.status, 'Axios response')
+        }).catch(function(error){
+            output(response.data, response.status, 'Axios FAIL')
+        })
+    }
+    function ajaxJQ(url, method, formd) {
+        $.ajax({
+            url: url
+            , type: method
+            , data: formd
+            , success: function (data) {
+                //console.log(data)
+            }
+        }).done(function (response, textStatus, xhr) {
+            output(response, xhr.status, 'jQuery response')
+        }).fail(function (response, textStatus, xhr) {
+            output(response, xhr.status, 'jQuery ERROR')
+        })
+    }
+    function ajaxJS(url, method, formd) {
+        let xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4) {
+                if (xhr.status == 200) {
+                    output(xhr.responseText, xhr.status, 'JavaScript response')
+                }
+                else if (xhr.status == 201) {
+                    output(xhr.responseText, xhr.status, 'JavaScript Added')
+                }
+                else {
+                    output(xhr.responseText, xhr.status, 'JavaScript Error')
+                }
+            }
+        }
+        if (method == 'GET') {
+            xhr.open('GET', url, true);
+            xhr.send();
+        }
+        else {
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+            xhr.send(formd);
+        }
+    }
+    function output(responseText, status, xhr) {
+        let output = document.getElementById('output');
+
+        console.log(responseText)
+        console.log('%c' + status, "color:green")
+        console.log('%c' + xhr , "color:red")
+
+        responseText = ((typeof responseText) == 'string') ? JSON.parse(responseText) : responseText;
+
+        output.innerHTML = '<div><span class="heading">Response Text</span><p>' + JSON.stringify(responseText) + '</p></div>'
+        output.innerHTML += '<div><span class="heading">Status</span><p>' + JSON.stringify(status) + '</p></div>'
+        output.innerHTML += '<div><span class="heading">Response</span><p>' + JSON.stringify(xhr) + '</p></div>'
+    }
 </script>
 </body>
-
 </html>
