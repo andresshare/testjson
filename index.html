@@ -69,7 +69,7 @@
         buildPage();
     })
     $('#usersList').on('click', '.remove', function () {
-        var id = $(this).parent().data('user').id;
+        let id = $(this).parent().data('user').id;
         $.ajax({
             url: '/users/' + id
             , type: 'DELETE'
@@ -80,8 +80,8 @@
         })
     })
     $('#usersList').on('click', '.edit', function () {
-        var data = $(this).parent().find('input').serialize();
-        var id = $(this).parent().find('input[name="id"]').val();
+        let data = $(this).parent().find('input').serialize();
+        let id = $(this).parent().find('input[name="id"]').val();
         $.ajax({
             url: '/users/' + id
             , type: 'PUT'
@@ -95,8 +95,8 @@
     })
 
     $('.btn').click(function () {
-        var user = $('input[name="user"]').val();
-        var pass = $('input[name="pass"]').val();
+        let user = $('input[name="user"]').val();
+        let pass = $('input[name="pass"]').val();
         $.post('/users', $('#myform').serialize()).done(function (data) {
             console.log(data);
             buildPage();
@@ -107,12 +107,12 @@
         $('#usersList').html(' ');
         $.getJSON('/users', function (data) {
             $.each(data.users, function (i, value) {
-                var el = '<li><input type="text" name="user" value="'+value.user+'">';
+                let el = '<li><input type="text" name="user" value="'+value.user+'">';
                 el += '<input type="text" name="pass" value="'+value.pass+'">';
                 el += '<input type="hidden" name="id" value="'+value.id+'">';
                 el += '<span class="remove">x</span><span class="edit">Save</span>';
                 el += '<span class="viewLink"><a href="/users/' + value.id + '" target="_blank">View</a></span></li>';
-                var listNew = $(el);
+                let listNew = $(el);
                 listNew.data('user', value);
                 $('#usersList').append(listNew);
             })

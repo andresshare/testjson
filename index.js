@@ -1,9 +1,9 @@
-var express = require('express')
-var app = express();
-var path = require('path');
-var Pusher = require('pusher');
-var bodyParser = require('body-parser');
-var pusher = new Pusher({
+let express = require('express')
+let app = express();
+let path = require('path');
+let Pusher = require('pusher');
+let bodyParser = require('body-parser');
+let pusher = new Pusher({
     appId: '501582'
     , key: '***'
     , secret: '***'
@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({
 app.use(express.static(path.join(__dirname, 'public')));
 app.post('/comment', function (req, res) {
     console.log(req.body);
-    var newMessage = {
+    let newMessage = {
         name: req.body.name
         , message: req.body.message
     }
