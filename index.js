@@ -1,29 +1,32 @@
-let express = require('express')
-let app = express();
-let path = require('path');
-let Pusher = require('pusher');
-let bodyParser = require('body-parser');
-let pusher = new Pusher({
-    appId: '501582'
-    , key: '***'
-    , secret: '***'
-    , cluster: 'us2'
-    , encrypted: true
-});
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({
-    extended: false
-}));
-app.use(express.static(path.join(__dirname, 'public')));
-app.post('/comment', function (req, res) {
-    console.log(req.body);
-    let newMessage = {
-        name: req.body.name
-        , message: req.body.message
-    }
-    pusher.trigger('my-channel', 'my-event', newMessage);
-    res.json({
-        created: true
+const express = require('express')
+const app = express()
+const request = require('request');
+const url = 'https://api.coinmarketcap.com/v1/ticker/';
+app.use(express.static(__dirname + '/public'));
+app.get('/load', function (req, res) {
+    request(url, function (error, response, body) {
+        let holder = [];
+        let data = JSON.parse(body);
+        for (var i = 0; i < data.length; i++) {
+            holder.push(data[i].id.capitalize());
+        }
+        res.json(holder);
     });
 })
+app.get('/price/:cur', function (req, res) {
+    let curValue = (req.params.cur) ? req.params.cur : 'USD';
+    request(url + '?convert=' + curValue, function (error, rep, body) {
+        res.json(body);
+    })
+})
+app.get('/cyrpto/:cur', function (req, res) {
+    console.log(req.params);
+    let curValue = (req.params.cur) ? req.params.cur : 'Bitcoin';
+    request(url + curValue + '/', function (error, rep, body) {
+        res.json(body);
+    })
+})
 app.listen(3000)
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
